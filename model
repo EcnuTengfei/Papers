@@ -1,27 +1,27 @@
-(declare-sort Message)
-(declare-const OneA Message)
+(declare-sort Message)		;declare a sort Message	
+(declare-const OneA Message)	;declare the type of message
 (declare-const OneB Message)
 (declare-const TwoA Message)
 (declare-const TwoB Message)
 (declare-const msgs Message)
-(declare-const maxVBal Int)
-(declare-const maxBal Int)
-(declare-const maxVal Int)
-(declare-sort Acceptor)
-(declare-const a Acceptor)
-(declare-const b Int)
+(declare-const maxVBal Int)	; max Value of the ballot
+(declare-const maxBal Int)	;max ballot
+(declare-const maxVal Int)	;max value
+(declare-sort Acceptor)		;declare a type : Acceptor
+(declare-const a Acceptor)	;declare a instince of Acceptor 
+(declare-const b Int)		
 (declare-const type Message)
 (declare-const bal Int)
-(declare-fun prepare (Message Int) Bool)
-(assert (= type OneA))
-(assert (= bal b))
-(assert (= (prepare type b) true))
+(declare-fun prepare (Message Int) Bool)	;declare the "1a" process with function prepare
+(assert (= type OneA))			; m.type = OneA
+(assert (= bal b))			; m.bal = b
+(assert (= (prepare type b) true)) 	;prepare(OneA, b)
 (check-sat)
 
 (declare-const acc Acceptor)
 (assert (= type OneA))
-(assert (> bal maxBal))
-(declare-fun promise (Message Int Int Int Acceptor) Bool)
+(assert (> bal maxBal))			; if the bal is greater than maxBal of an acceptor
+(declare-fun promise (Message Int Int Int Acceptor) Bool)	;declare the phase "1b" with promise function
 (assert (= (promise type bal maxVBal maxVal acc) true))
 (check-sat)
 
@@ -30,7 +30,7 @@ declare-const v Int)
 (declare-const c Int)
 (declare-fun f (Acceptor Message) Message)
 (declare-fun g (Acceptor Int) Int)
-(assert (= type TwoA))
+(assert (= type TwoA))				; the folowing asserts is the constraint that "2a" must satisfy
 (assert (forall ((a Acceptor)) 
 			(and (= (f a type) TwoA)
 				(= (g a bal) b)
