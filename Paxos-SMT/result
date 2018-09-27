@@ -1,0 +1,65 @@
+sat
+sat
+sat
+sat
+(model 
+  ;; universe for Message:
+  ;;   Message!val!1 Message!val!0 
+  ;; -----------
+  ;; definitions for universe elements:
+  (declare-fun Message!val!1 () Message)
+  (declare-fun Message!val!0 () Message)
+  ;; cardinality constraint:
+  (forall ((x Message)) (or (= x Message!val!1) (= x Message!val!0)))
+  ;; -----------
+  ;; universe for Acceptor:
+  ;;   Acceptor!val!0 
+  ;; -----------
+  ;; definitions for universe elements:
+  (declare-fun Acceptor!val!0 () Acceptor)
+  ;; cardinality constraint:
+  (forall ((x Acceptor)) (= x Acceptor!val!0))
+  ;; -----------
+  (define-fun acc () Acceptor
+    Acceptor!val!0)
+  (define-fun type () Message
+    Message!val!0)
+  (define-fun TwoB () Message
+    Message!val!1)
+  (define-fun maxVBal () Int
+    0)
+  (define-fun maxVal () Int
+    5)
+  (define-fun b () Int
+    3)
+  (define-fun a () Acceptor
+    Acceptor!val!0)
+  (define-fun bal () Int
+    3)
+  (define-fun OneB () Message
+    Message!val!0)
+  (define-fun c!0 () Int
+    1)
+  (define-fun v () Int
+    7)
+  (define-fun maxBal () Int
+    2)
+  (define-fun TwoA () Message
+    Message!val!0)
+  (define-fun OneA () Message
+    Message!val!0)
+  (define-fun val () Int
+    9)
+  (define-fun f ((x!0 Acceptor) (x!1 Message)) Message
+    Message!val!0)
+  (define-fun send ((x!0 Message) (x!1 Int) (x!2 Int) (x!3 Acceptor)) Bool
+    true)
+  (define-fun prepare ((x!0 Message) (x!1 Int)) Bool
+    true)
+  (define-fun g ((x!0 Acceptor) (x!1 Int)) Int
+    3)
+  (define-fun accept ((x!0 Message) (x!1 Int) (x!2 Int)) Bool
+    true)
+  (define-fun promise ((x!0 Message) (x!1 Int) (x!2 Int) (x!3 Int) (x!4 Acceptor)) Bool
+    true)
+)

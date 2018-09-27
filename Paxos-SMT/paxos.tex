@@ -1,0 +1,537 @@
+
+% *** Authors should verify (and, if needed, correct) their LaTeX system  ***
+% *** with the testflow diagnostic prior to trusting their LaTeX platform ***
+% *** with production work. The IEEE's font choices and paper sizes can   ***
+% *** trigger bugs that do not appear when using other class files.       ***                          ***
+% The testflow support page is at:
+% http://www.michaelshell.org/tex/testflow/
+
+
+
+\documentclass[conference]{IEEEtran}
+% Some Computer Society conferences also require the compsoc mode option,
+% but others use the standard conference format.
+%
+% If IEEEtran.cls has not been installed into the LaTeX system files,
+% manually specify the path to it like:
+% \documentclass[conference]{../sty/IEEEtran}
+
+
+
+
+% *** CITATION PACKAGES ***
+%
+\usepackage{cite}
+
+
+
+
+
+% *** GRAPHICS RELATED PACKAGES ***
+%
+\ifCLASSINFOpdf
+   \usepackage[pdftex]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../pdf/}{../jpeg/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.pdf,.jpeg,.png}
+\else
+  % or other class option (dvipsone, dvipdf, if not using dvips). graphicx
+  % will default to the driver specified in the system graphics.cfg if no
+  % driver is specified.
+  % \usepackage[dvips]{graphicx}
+  % declare the path(s) where your graphic files are
+  % \graphicspath{{../eps/}}
+  % and their extensions so you won't have to specify these with
+  % every instance of \includegraphics
+  % \DeclareGraphicsExtensions{.eps}
+\fi
+
+
+
+
+% *** MATH PACKAGES ***
+%
+\usepackage{amsmath}
+% A popular package from the American Mathematical Society that provides
+% many useful and powerful commands for dealing with mathematics.
+
+\usepackage{latexsym}
+\usepackage{amssymb}
+
+
+\usepackage[T1]{fontenc}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\lstset{
+language=C++,
+basicstyle=\small\ttfamily,
+columns=fullflexible,
+keywords=[2]{annex, system, end},
+keywords=[3]{Message, Int, Acceptor, Ballot, Bool},
+keywords=[4]{declare, -, const, declare, -, sort, declare, fun, declare--const, declare--sort, declare--fun, assert, forall, exists, check, -, sat, get, -, model},
+keywords=[5]{bool, int, real, and, or, implies, Until},
+keywordstyle={\color{blue!80!black}},
+keywordstyle=[2]{\color{red!80!black}},
+keywordstyle=[3]{\color{green!60!black}},
+keywordstyle=[4]{\color{blue!100!black}},
+keywordstyle=[5]{\color{orange!50!black}},
+}
+
+
+% *** PDF, URL AND HYPERLINK PACKAGES ***
+%
+\usepackage{url}
+
+
+
+
+% *** Do not adjust lengths that control margins, column widths, etc. ***
+% *** Do not use packages that alter fonts (such as pslatex).         ***
+% There should be no need to do such things with IEEEtran.cls V1.6 and later.
+% (Unless specifically asked to do so by the journal or conference you plan
+% to submit to, of course. )
+
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\begin{document}
+%
+
+\title{Formal Verification of Basic Paxos for Distributed Consistency Based on SMT}
+
+
+% author names and affiliations
+% use a multiple column layout for up to three different
+% affiliations
+\author{\IEEEauthorblockN{Tengfei Li}
+\IEEEauthorblockA{East China Normal University\\
+Shanghai, 200062, China\\
+Email: tengfeili2015@gmail.com}
+\and
+\IEEEauthorblockN{Jing Liu, Haiying Sun}
+\IEEEauthorblockA{East China Normal University\\
+Shanghai, 200062, China\\
+Email: {jliu,hysun}@sei.ecnu.edu.cn}
+}
+
+% conference papers do not typically use \thanks and this command
+% is locked out in conference mode. If really needed, such as for
+% the acknowledgment of grants, issue a \IEEEoverridecommandlockouts
+% after \documentclass
+
+
+% make the title area
+\maketitle
+
+% As a general rule, do not put math, special symbols or citations
+% in the abstract
+\begin{abstract} Distributed systems lead to distributed consistency problem because of node failure and unreliable network when transferring information through the network. In the paper, we present an approach for formal verification of the classical Paxos protocol for consensus consistency.  The specification is written in TLA+, Lamport's Temporal Logic of Actions. We verify the protocol using a SMT(Satisfiability Modulo Theory)-based approach. Specifically, we describe the Paxos protocol and verify if it is satisfiable using Z3 solver. It returns a solution that satisfies all the constraints.
+
+\end{abstract}
+
+%\textbf{Keywords:}   Paxos   \quad Distributed Consistency\quad    Z3\quad     Formal Verification\quad   SMT(Satisfiability Modulo Theory)
+\medskip
+
+
+% no keywords
+
+
+
+
+% For peer review papers, you can put extra information on the cover
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+% no \IEEEPARstart
+
+When processing capacity of single node can not meet the need of the growing computing and storage tasks, and hardware upgrade (memory, disk, and CPU) leads to too expensive to pay, we need to consider the distributed system. However, distributed system is a topological structure with multiple nodes through network communication, in order to solve these problems, more mechanisms and protocols will be introduced. Further, this brings more challenges of distributed systems mainly including node failure and unreliable network when transferring information through the network. Those challenges leads to distributed consistency problem. 
+
+In order to solve distributed consistency problem, Lamport\cite{lam2001} proposed Paxos algorithm, which is a consistency algorithm based on message transfer model with highly fault-tolerance. Paxos has attracted the mind of many researches in the field of computer science,  and it has been proved its effectiveness in distributed systems. However, there left a critical question how to guarantee its correctness of the algorithm. Charron-Bost\cite{CM09} proposes a formal verification of a non-trivial Consensus algorithm using the proof assistant Isabelle/HOL.  Rahli\cite{RGB15} specifies the Multi-Paxos protocol in EventML and proved its safety properties to be correct in Nuprl. Marzullo\cite{MMM13} presents a simple proof for Paxos and fast Paxos through the definition of safety and liveness.
+Delzanno\cite{Del14} verifies distributed broadcast protocols bases on graph rewriting and graph transformation systems. Tsuchiya\cite{TS08} proposes a bound model checking to check Pasox LastVoting  algorithm through reducing state space of the distributed system. Kellomaki\cite{Kel04} provides the specification and proof of the consensus protocol of Paxos using PVS.
+
+Those approaches focus on correctness of verifying Paxos algorithm. However, there is not enough to solve the Paxos and return the value that makes the algorithm satisfactory. In this paper, we present the specification and verification of Paxos sing a SMT(Satisfiability Modulo Theory)\cite{BFT15,MR11}-based approach. Specifically, we describe the Paxos algorithm and check if it is satisfiable using Z3 constraint solver\cite{MB08}. Although there are several variant algorithms for Paxos, like, Cheap Paxos\cite{LM07}, Fast Paxos\cite{Lam06} and Vertical Paxos\cite{LMZ09}, we just verify a classical one (Basic Paxos), because during every round, each process first sends messages and then receives messages from other processes, and finally makes a local state transition. In the following of the paper, we adopt Paxos to represent Basic Paxos.  So, our contribution is specification and verification of Paxos using Z3 solver. 
+
+Next section, we will present the preliminary of the algorithm Paxos and the SMT solver Z3. In section 3, we will model the distributed protocol with Z3 from the aspect of the process of communication. The verification of the model and the discussion of verification result will be present in section 4. In last section, we will conclude the work.
+
+
+% An example of a double column floating figure using two subfigures.
+% (The subfig.sty package must be loaded for this to work.)
+% The subfigure \label commands are set within each subfloat command,
+% and the \label for the overall figure must come after \caption.
+% \hfil is used as a separator to get equal spacing.
+% Watch out that the combined width of all the subfigures on a 
+% line do not exceed the text width or a line break will occur.
+%
+%\begin{figure*}[!t]
+%\centering
+%\subfloat[Case I]{\includegraphics[width=2.5in]{box}%
+%\label{fig_first_case}}
+%\hfil
+%\subfloat[Case II]{\includegraphics[width=2.5in]{box}%
+%\label{fig_second_case}}
+%\caption{Simulation results for the network.}
+%\label{fig_sim}
+%\end{figure*}
+%
+
+
+%------------------------------
+\section{Preliminary}
+
+\subsection{Paxos}
+Paxos is a classical protocol for distributed consistency, proposed by Lamport\cite{lam2001}. Paxos protocol employs three classes of agents: client, proposer, acceptor and learner. The client distributes the number of proposal to every proposer. Then the proposer proposes to the acceptors to make decisions. The acceptors have the right to decide whether accepts the proposal. An acceptor will promise to the proposer from which the proposal is the max value among all the accepted proposal. If one of the acceptors accepts preliminarily the proposal, the proposer will send the message to ascertain whether the proposal has been accepted by the acceptor. After that the acceptor responds the corresponding message to the proposer. Meanwhile, the acceptors send the number of proposal to the learner. Otherwise, the acceptor reject the proposal immediately. Learner learns from the acceptors by the proposal, and distinguishes the final result through the decision of the majority of the acceptors. The specific progress is shown in Figure~\ref{brief}:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=2.8in]{figures/brief.pdf}%
+\caption{The Brief Paxos Protocol.}
+\label{brief}
+\end{figure}
+
+The process of communication can be simplified to the following progress:
+\begin{itemize}
+\item \emph{Prepare}: The proposers prepare the proposal and send the proposal with  \emph{Prepare} message to all the acceptors. 
+\item \emph{Promise}: The acceptor responds to the proposer if the \emph{Prepare} message is accepted. Otherwise, the acceptor sends nothing back to the proposer. Specifically, if the number of the proposal is great than that of the proposal has been accepted before, and then the acceptor sends a \emph{Promise} message back to the proposer  In this way, the acceptor promises that it will not participate in any round smaller than i and it will stick to this promise. Along with the promise, the acceptor sends the last value it has voted and the associated round.
+\item \emph{Accept}: After collecting a quorum of n promises for round i from the acceptors, the proposer sends an \emph{Accept} message to all the acceptors asking to vote for a value selected as follows:
+	A value v proposed by the proposer, if no acceptor in the quorum has ever voted;
+	The value vval in the promises that is associated with the highest round, otherwise (note that there can exists at most one such value, since the only value that can be voted in a round is the one proposed by the proposer that is responsible of that round).
+\item \emph{Learn}: If an acceptor receives an \emph{Accept} message, and if it has not promised otherwise, it votes for the value in the message and sends a \emph{Learn} message to all the learners to let them know about the vote. Acceptors votes only once in each round. 
+\end{itemize}
+
+\subsection{Z3}
+Z3 is developed by L. de Moura and N. Bjorner at Microsoft Research\footnote{https://github.com/Z3Prover/z3}, as a popular SMT solver owing to its efficiency to verify the satisfaction of the system. 
+
+It describes a system with the syntax of first-order logic, arithmetic, bit-vectors, arrays and tuples. Each category of the syntax need to be declared with the command of \emph{declare-const} and \emph{declare-fun}. And then we will declare \emph{assert} to describe the formula. The command \emph{check-sat} determines whether the current formulas are satisfiable or no. The expressiveness and corresponding operators are shown in Table~\ref{tab_1}:
+
+
+ \begin{table}[htbp]
+ \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+ \renewcommand{\arraystretch}{1.3}
+ \centering\caption{Syntax of Z3}\label{tab_1}
+\begin{tabular}{|c|c|}
+  \hline  \hline
+  % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+   Expressiveness &  Operators \\
+    \hline
+   Propositional Logic  & and, or \\
+  \hline
+   Arithmetic  & \tabincell{c}{Addition, Subtract, Multiplication, Division, \\Integer Division, Modulo and Remainder operators}\\
+  \hline
+  Bit-vectors& \tabincell{c}{bvadd, bvsub, bvneg, bvmul, bvor, bvand, \\bvnot, bvule, bvult,...}\\
+  \hline
+   Arrays & select, store\\
+   \hline
+   Datatypes & Record, Scalar, Recursive datatypes\\
+  \hline
+   Quantifiers & forall, exists\\
+  \hline  
+  
+\end{tabular}
+\end{table}
+
+
+
+%------------------------------
+\section{Modeling of Paxos}
+
+Poxos provides an approach to deal with distributed consistency. Among its four actors,  proposer and acceptor play a key role in the algorithm. The algorithm give a constraint condition of safety requirement\cite{lam2001}: 
+
+\begin{itemize}
+\item[-] Only a value that has been proposed may be chosen.
+\item[-] Only a single value is chosen.
+\item[-] A proposer never learns that a value has been chosen unless it actually has been chosen.
+\end{itemize}
+
+This safety requirement for consistency is described as:\\
+
+$Consistency \triangleq \forall~v_{1}, v_{2} \in \mathcal{V} : \phi(v_{1}) \wedge \phi(v_{2}) \Rightarrow  v_{1} = v_{2}$\\
+
+, where $\phi(v)$ means that $v$ has been chosen.
+
+The safety requirement ensures the uniqueness of the chosen values. That is, consistency is guaranteed in distributed environment because of uniqueness even if the information is tampered illegally.
+
+How the unique value is chosen depending on the predicate $\phi(v)$. From this definition, it is obvious how a process learns that a value has been chosen from messages $send('2b', v, b, a)$.  Predicate $\phi$ is defined as follows:\\
+
+$\phi(v) \triangleq \exists ~b \in \mathcal{B}, \exists Q \in \mathcal{Q}, \forall a \in Q, send('2b', v, b, a)$\\
+
+where $\mathcal{B}$ is a set of ballots. $\mathcal{Q}$ is a subset of all the acceptors, and $Q$ is a subset of $\mathcal{Q}$ .
+
+
+Paxos algorithm is divided into two phases. In the first phase, the proposer sends the message to a majority of acceptor and receives a responds from the acceptors whose proposal is highest-numbered ballot. In phase 2, the proposal sends a \emph{accept} request to those acceptors with a value $v$, and the acceptors accept the proposal.
+
+
+\subsection{Phase 1}
+ In the first stage, the proposer and acceptors finishes the first handshaking for communicating each other. The proposer sends the \emph{prepare} request to the acceptors, and gets the \emph{promise} from the acceptors after their judgement.
+
+
+\begin{table}[htbp]
+ \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.3}
+\caption{Phase 1 of Paxos}
+\label{phase1}
+\centering
+\begin{tabular}{|c||c|}
+\hline
+Phase 1a & \tabincell{c}{A leader selects a ballot number $b$ and sends\\
+					 a $1a$ message with ballot $b$ to a majority of \\
+					 acceptors.  It can do this only if it has not already \\
+					 sent a $1a$ message for ballot $b$\\
+					
+					}\\
+\hline
+Phase 1b & \tabincell{c}{ If an acceptor receives a $1a$ message with \\
+					ballot $b$ greater than that of any $1a$ message \\
+					to which it has already responded, then it  \\
+					responds to the request with a promise not \\
+					to accept any more proposals or ballots \\
+					numbered less than $b$ and with the \\
+					highest-numbered ballot (if any) for which \\
+					it has voted for a value and the value it \\
+					voted for  in that ballot.  That promise is \\
+					made in a $1b$ message.  }\\
+\hline
+\end{tabular}
+\end{table}
+
+
+
+\paragraph{Phase 1a}
+ 
+
+ Phase 1a applies the command $prepare(type, bal)$ to communicate between the proposer and acceptors. Listing~\ref{lst1} presents the model of phase 1a. First, the sort type $Message$ is declared to represent the type of the transmitted message ($OneA$, $OneB$, $TwoA$, $TwoB$) and a set of message $msgs$. In order to express the highest-number ballot acceptor and the highest ballot, $maxBal$, $maxVBal$, $maxVal$ are adopted when the acceptors decide which one proposal should be  sent or whether is essential to send a proposal to the proposer. The sort $Acceptor$ is a set of acceptors and an acceptor $a$ is declared as the type of $Acceptor$. Also, $bal$ represent a ballot as the type of $Int$.
+ 
+\noindent
+
+\begin{lstlisting}[caption={Model of a Phase 1a}, label={lst1}]
+(declare-sort Message)
+(declare-const OneA Message)
+(declare-const OneB Message)
+(declare-const TwoA Message)
+(declare-const TwoB Message)
+(declare-const msgs Message)
+(declare-const maxVBal Int)
+(declare-const maxBal Int)
+(declare-const maxVal Int)
+(declare-sort Acceptor)
+(declare-const a Acceptor)
+(declare-const b Int)
+(declare-const type Message)
+(declare-const bal Int)
+(declare-fun prepare (Message Int) Bool)
+(assert (= type OneA))
+(assert (= bal b))
+(assert (= (prepare type b) true))
+(check-sat)
+\end{lstlisting}
+%
+
+A function $prepare$ is declared for proposer to send the type $ OneA$ and the ballot $b$ to acceptors. Z3 checks the proposition with the command $check-sat$.
+
+\paragraph{Phase 1b}
+
+This subphase employs command $promise(type ~bal~ maxVBal~ maxVal~ acc)$ to describe that the acceptors send the $promise$ to the proposer after determining the proposal to be sent. 
+
+\noindent
+\begin{lstlisting}[caption={Model of Phase 1b}, label={lst2}]
+(declare-const acc Acceptor)
+(assert (= type OneA))
+(assert (> bal maxBal))
+(declare-fun promise (Message Int Int Int 
+				Acceptor) Bool)
+(assert (= (promise type bal maxVBal maxVal 
+				acc) true))
+(check-sat)
+\end{lstlisting}
+
+As shown in Listing~\ref{lst2}, a constant $acc$ with $Acceptor$ type is declared to represent the acceptor who needs to send the proposal to the proposer. It is worth noting that the sent ballot $bal$ is the highest ballot.
+
+
+\subsection{Phase 2}
+The second phase mainly send the ballot and value of the highest-numbered proposal among the responses by the proposer to the acceptors. After that, the acceptors vote for the message's value $v$ in ballot $b$. The description is list as Table.~\ref{phase2}:
+
+\begin{table}[htbp]
+ \newcommand{\tabincell}[2]{\begin{tabular}{@{}#1@{}}#2\end{tabular}}
+%% increase table row spacing, adjust to taste
+\renewcommand{\arraystretch}{1.3}
+\caption{Phase 2 of Paxos}
+\label{phase2}
+\centering
+\begin{tabular}{|c||c|}
+\hline
+Phase 2a & \tabincell{c}{If the leader receives a response to its $1b$ message \\
+					(for ballot b) from a quorum of acceptors, then it\\
+					 sends a $2a$ message to all acceptors for a proposal \\
+					 in ballot $b$ with a value $v$, where $v$ is the value \\
+					 of the highest-numbered proposal among the responses,\\
+					 or is any value if the responses reported no proposals. \\ 
+					 The leader can send only one $2a$ message for any ballot. 					
+					}\\
+\hline
+Phase 2b & \tabincell{c}{ If an acceptor receives a $2a$ message for a ballot \\
+					numbered $b$, it votes for the message's value in \\
+					ballot $b$ unless it has already responded to a $1a$ \\
+					request for a ballot number greater than or equal to $b$.        
+ 					}\\
+\hline
+\end{tabular}
+\end{table}
+
+\paragraph{Phase 2a}
+
+Phase 2a presents that the proposer sends ballot $b$ and the corresponding value $v$ to the acceptors. Listing~\ref{lst3} declares a value $v$ and $c$ with type of $Int$. Z3 isn't enough to express the return of two values, so we build two function $f$ and $g$ to return the type of message and ballot $b$ respectively.
+\noindent
+\begin{lstlisting}[caption={Model of Phase 2a}, label={lst3}]
+(declare-const v Int)
+(declare-const c Int)
+(declare-fun f (Acceptor Message) Message)
+(declare-fun g (Acceptor Int) Int)
+(assert (= type TwoA))
+(assert (forall ((a Acceptor)) 
+			(and (= (f a type) TwoA)
+				(= (g a bal) b)
+)))
+(assert (exists ((v Int))
+	 	(exists ((m Message)) 
+	 		(and (= (f a type) OneB)
+				(= (g a bal) b)
+			))
+))
+(assert (forall ((a Acceptor)) 
+		(exists ((m Message)) 
+				(= acc a)
+)))
+(assert (or (exists ((c Int)) 
+			(and (> c 0) 
+				(< c (- b 1))
+		)) 
+		(forall ((m Message))
+			 (<= maxVBal c)
+		)
+		(exists ((m Message))
+             		(and (= maxVBal c) 
+             	      		(= maxVBal v)
+		))
+))
+(declare-fun accept (Message Int Int) Bool)
+(assert (= (accept TwoA b v) true))
+(check-sat)
+\end{lstlisting}
+
+After declaring the set of formulas, we declare a function $accept$ to send the type of message $TwoA$, the ballot $b$ and the responding value $v$ to the acceptors who send the $promise$ information. The $accept$ function needs to be checked satisfiable under the condition of the declaration of the former $assert$.
+
+
+\paragraph{Phase 2b}
+
+Phase 2b guarantees that an acceptor votes for the message's value in the received ballot $b$. In the round, a message with the ballot appears. Listing~\ref{lst4} shows the model.
+
+\noindent
+\begin{lstlisting}[caption={Model of Phase 2b}, label={lst4}]
+(declare-const val Int)
+(declare-fun learn (Message Int Int 
+			Acceptor) Bool)
+(assert (exists ((m Message)) 
+		(and (= type TwoA)
+			(>= bal maxBal)
+		)
+))
+(assert (= (learn TwoB bal val a) true))
+(check-sat)
+(get-model)
+\end{lstlisting}
+
+
+\section{Formal Verification of Paxos}
+
+\subsection{Verification result}
+The advantage of the Z3 solver is that the solution it returns is the boundary value, and we can know how to get the value of the system in the boundary of the formula constraints. After specifying the mode of Paxos using constraint condition, we get the solution that Z3 returns. The verification result is shown in Figure~\ref{result}. And the specific result is provided in the website\footnote{https://github.com/EcnuTengfei/paxos-z3}. 
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=2.8in]{figures/result.pdf}%
+\caption{Verification of Paxos.}
+\label{result}
+\end{figure}
+
+The command \emph{get-model} retrieves an interpretation that makes all the constraint true. The interpretation includes a solution of the verification result.
+
+\subsection{Discussion}
+
+We model Paxos protocol using Z3 solver. It returns a solution that satisfies all the constraints. To the best of our knowledge, this is the first work to verify Paxos using SMT. The verification result demonstrates the correctness of the approach. Further, using Z3 to verify the variant of Paxos will be relatively easy based on Basic Paxos.  But, there is short of comparison with other related work especially in the aspect of performance. Apasuthirat\cite{AT14} present an algebraic specification language and model the Paxos protocol using Maude. Chand, Liu et al\cite{CLS16} model Multi-Paxos and verify the algorithm. Küfner\cite{KNR12} provides an approach based on graph rewriting and graph transformation systems. He models Paxos algorithm through specification (via automata) and verification (via model checking) the protocol using Promela/SPIN. Therefore, the comparison will be our direction in next work.
+
+\section{Conclusion}
+
+In this paper, we present an approach to specify and verify Paxos protocol for distributed consistency based on SMT. Compared with other methods, Z3 solver provides a more simple way to check the Paxos protocol than model checking for searching all the state spaces and theorem proving~\cite{Kel04} for strict proof. 
+
+% For peer review papers, you can put extra information on the coveri
+% page as needed:
+% \ifCLASSOPTIONpeerreview
+% \begin{center} \bfseries EDICS Category: 3-BBND \end{center}
+% \fi
+%
+% For peerreview papers, this IEEEtran command inserts a page break and
+% creates the second title. It will be ignored for other modes.
+\IEEEpeerreviewmaketitle
+
+% trigger a \newpage just before the given reference
+% number - used to balance the columns on the last page
+% adjust value as needed - may need to be readjusted if
+% the document is modified later
+%\IEEEtriggeratref{8}
+% The "triggered" command can be changed if desired:
+%\IEEEtriggercmd{\enlargethispage{-5in}}
+
+% references section
+
+% can use a bibliography generated by BibTeX as a .bbl file
+% BibTeX documentation can be easily obtained at:
+% http://mirror.ctan.org/biblio/bibtex/contrib/doc/
+% The IEEEtran BibTeX style support page is at:
+% http://www.michaelshell.org/tex/ieeetran/bibtex/
+%\bibliographystyle{IEEEtran}
+% argument is your BibTeX string definitions and bibliography database(s)
+%\bibliography{IEEEabrv,../bib/paper}
+%
+% <OR> manually copy in the resultant .bbl file
+% set second argument of \begin to the number of references
+% (used to reserve space for the reference number labels box)
+\begin{thebibliography}{1}
+\bibitem{lam2001}L.~Lamport. \emph{Paxos made simple}. SIGACT News (Distributed Computing Column) 32(4), 51-58 (2001)
+\bibitem{CM09} Charron-Bost B, Merz S. \emph{Formal Verification of a Consensus Algorithm in the Heard-Of Model}. Intl.j.software \& Informatics, 2009, 3:273-303.
+\bibitem{RGB15}Rahli V, Guaspari D, Bickford M, et al. \emph{Formal Specification, Verification, and Implementation of Fault-Tolerant Systems using EventML}. Nuprl Org, 2015.
+\bibitem{MMM13}Marzullo, K., Mei, A., Meling, H.: \emph{A simpler proof for paxos and fast paxos}. Course Notes (2013)
+\bibitem{Del14}Delzanno G. \emph{Parameterized Verification and Model Checking for Distributed Broadcast Protocols}. Graph Transformation. Springer International Publishing, 2014:1-16.
+\bibitem{TS08}Tsuchiya T, Schiper A. \emph{Using Bounded Model Checking to Verify Consensus Algorithms}. International Symposium on Distributed Computing. Springer-Verlag, 2008:466-480.
+\bibitem{Kel04}Kellomaki P. \emph{An Annotated Specification of the Consensus Protocol of Paxos Using Superposition in PVS}. Tampereen Teknillinen Yliopisto, 2004.
+\bibitem{BFT15}C.~Barrett, P.~Fontaine, and C.~Tinelli. \emph{The SMT-LIB Standard Version 2.5 Reference Manual}, Jun. 2015.
+\bibitem{MR11}De Moura L, Rner N. Satisfiability modulo theories: introduction and applications[J]. Communications of the Acm, 2011, 54(9):69-77.
+\bibitem{MB08}Moura L D, Bjørner N. Z3: An Efficient SMT Solver[J]. Lecture Notes in Computer Science, 2008, 4963:337-340.
+\bibitem{LM07}Lamport L B, Massa M T. \emph{Cheap paxos}. IEEE, US 7249280 B2[P]. 2007.
+\bibitem{Lam06}L.~Lamport. \emph{Fast paxos}. Distributed Computing, 19(2):79?103, 2006.
+\bibitem{LMZ09}Lamport L, Malkhi D, Zhou L. \emph{Vertical paxos and primary-backup replication}. ACM Symposium on Principles of Distributed Computing. ACM, 2009:312-313.
+\bibitem{AT14}Apasuthirat, Thanisorn. \emph{A survey of formal verification of Paxos and a case study with an algebraic specification language} 2014
+\bibitem{CLS16}Chand S, Liu Y A, Stoller S D. \emph{Formal Verification of Multi-Paxos for Distributed Consensus}. International Symposium on Formal Methods. Springer International Publishing, 2016:119-136.
+\bibitem{KNR12}Küfner P, Nestmann U, Rickmann C. \emph{Formal Verification of Distributed Algorithms}. IFIP International Conference on Theoretical Computer Science. Springer, Berlin, Heidelberg, 2012:209-224.
+
+\end{thebibliography}
+
+
+
+% that's all folks
+\end{document}
+
+
